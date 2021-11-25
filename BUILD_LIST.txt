@@ -1,0 +1,8 @@
+﻿lw.ps1
+lw.vbs
+lws.ps1
+readme.md
+setup-legion-watcher.bat
+start-legion-watcher.bat
+scripts\*
+vendor\*
