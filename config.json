@@ -1,0 +1,33 @@
+{
+	power_plan_change:
+	{
+		enable:true,
+		power_plans:
+		{
+			111: quiet
+			222: balanced
+			333: quiet,
+			444: balanced
+		}
+	},
+	smart_fan_mode_change:
+	{
+		enable:true,
+		power_plans:
+		{
+		   quiet      :111,
+		   balanced   :222,
+		   performance:333
+		}		
+	},
+	ac_switching:
+	{
+		enable:true,
+		fan_mode:
+		{
+			connect: balanced,
+			disconnect: quiet,
+		},
+		toggle_refresh:true
+	},
+}
