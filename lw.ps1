@@ -8,6 +8,21 @@ $host.ui.RawUI.WindowTitle = "Legion Watcher"
 
 $ScriptDir      = Split-Path $MyInvocation.MyCommand.Path -Parent
 $UserScriptsDir = "$ScriptDir\scripts"
+$lenovoClasses  = Get-WmiObject -Namespace "ROOT\WMI" -LIST | Where-Object {$_.name -match "LENOVO"} 
+
+function onLenovoWmiEvent($className, [ScriptBlock]$handler)
+{
+    $wmiClass = $lenovoClasses | Where-Object {$_.name -eq $className} | Select-Object -First 1
+    
+    if ($wmiClass)
+    {
+        Register-WMIEvent `
+            -Namespace "ROOT\WMI" `
+            -query "select * From $className" `
+            -sourceIdentifier "LegionWatcher_$ClassName" `
+            -action $handler
+    }
+}
 
 function RunPs1($PsFullPath, $arg1, $arg2)
 {
@@ -77,35 +92,17 @@ function HandleEvent($type, $info)
 # -----------------------------------------------------------------------------
 # Fired when user presses FN+Q
 ###############################################################################
-Register-WMIEvent `
-    -Namespace "ROOT\WMI" `
-    -query "select * From LENOVO_GAMEZONE_SMART_FAN_MODE_EVENT" `
-    -sourceIdentifier "LegionWatcher_LENOVO_GAMEZONE_SMART_FAN_MODE_EVENT" `
-    -action {
-	
-		$type = "smart_fan_mode_change"
-		$info = $EventArgs.NewEvent.mode
-		
-		HandleEvent $type $info
-    }
+onLenovoWmiEvent "LENOVO_GAMEZONE_SMART_FAN_MODE_EVENT" {HandleEvent "smart_fan_mode_change" $EventArgs.NewEvent.mode}
 	
 ###############################################################################
 # POWER CHARGE MODE EVENT
 # -----------------------------------------------------------------------------
 # Fired when AC adaptor is connected / disconnected
+# Two different event names based on the version of Vantage installed
 ###############################################################################
-Register-WMIEvent `
-    -Namespace "ROOT\WMI" `
-    -query "select * From LENOVO_GAMEZONE_POWER_CHARGE_MODE_EVENT_EVENT" `
-    -sourceIdentifier "LegionWatcher_LENOVO_GAMEZONE_POWER_CHARGE_MODE_EVENT_EVENT" `
-    -action {
-	
-		$type = "charge_mode_change"
-		$info = $EventArgs.NewEvent.mode
-		
-		HandleEvent $type $info
-    }
-	
+onLenovoWmiEvent "LENOVO_GAMEZONE_POWER_CHARGE_MODE_EVENT_EVENT" {HandleEvent "charge_mode_change" $EventArgs.NewEvent.mode}
+onLenovoWmiEvent "LENOVO_GAMEZONE_POWER_CHARGE_MODE_EVENT"       {HandleEvent "charge_mode_change" $EventArgs.NewEvent.mode}
+
 ###############################################################################
 # POWER CHANGE EVENT
 # -----------------------------------------------------------------------------
@@ -130,51 +127,21 @@ Register-WMIEvent `
 # -----------------------------------------------------------------------------
 # Fired when Light Profile is changed? (Not tested / Unable to trigger)
 ###############################################################################
-Register-WMIEvent `
-    -Namespace "ROOT\WMI" `
-    -query "select * From LENOVO_GAMEZONE_LIGHT_PROFILE_CHANGE_EVENT" `
-    -sourceIdentifier "LegionWatcher_LENOVO_GAMEZONE_LIGHT_PROFILE_CHANGE_EVENT" `
-    -action {		
-	
-		$type = "light_profile_change"
-		$info = ""
-	
-		HandleEvent $type $info
-    }
+onLenovoWmiEvent "LENOVO_GAMEZONE_LIGHT_PROFILE_CHANGE_EVENT" {HandleEvent "light_profile_change" ""}
 	
 ###############################################################################
 # FAN COOLING EVENT
 # -----------------------------------------------------------------------------
 # Fired when cooling has completed ? (Not Tested / Unable to trigger)
 ###############################################################################
-Register-WMIEvent `
-    -Namespace "ROOT\WMI" `
-    -query "select * From LENOVO_GAMEZONE_FAN_COOLING_EVENT" `
-    -sourceIdentifier "LegionWatcher_LENOVO_GAMEZONE_FAN_COOLING_EVENT" `
-    -action {		
-	
-		$type = "fan_cooling_change"
-		$info = ""
-	
-		HandleEvent $type $info
-    }
+onLenovoWmiEvent "LENOVO_GAMEZONE_FAN_COOLING_EVENT" {HandleEvent "fan_cooling_change" ""}
 	
 ###############################################################################
 # Thermal Mode Event
 # -----------------------------------------------------------------------------
 # Fired when Power Plan is changed to a Lenovo Power Plan
 ###############################################################################
-Register-WMIEvent `
-    -Namespace "ROOT\WMI" `
-    -query "select * From LENOVO_GAMEZONE_THERMAL_MODE_EVENT" `
-    -sourceIdentifier "LegionWatcher_LENOVO_GAMEZONE_THERMAL_MODE_EVENT" `
-    -action {		
-	
-		$type = "thermal_mode_change"
-		$info = $EventArgs.NewEvent.mode
-		
-		HandleEvent $type $info
-    }
+onLenovoWmiEvent "LENOVO_GAMEZONE_THERMAL_MODE_EVENT" {HandleEvent "thermal_mode_change" $EventArgs.NewEvent.mode}
 	
 ###############################################################################
 # Utility Event
@@ -187,14 +154,4 @@ Register-WMIEvent `
 #  4 - FN+PrtSc (Snip Sketch Launcher)
 # 16 - FN+R     (Refresh Rate toggle)
 ###############################################################################
-Register-WMIEvent `
-    -Namespace "ROOT\WMI" `
-    -query "select * From LENOVO_UTILITY_EVENT" `
-    -sourceIdentifier "LegionWatcher_LENOVO_UTILITY_EVENT" `
-    -action {		
-		
-		$type = "utility_keypress"
-		$info = $EventArgs.NewEvent.PressTypeDataVal
-		
-		HandleEvent $type $info
-    }
+onLenovoWmiEvent "LENOVO_UTILITY_EVENT" {HandleEvent "utility_keypress" $EventArgs.NewEvent.PressTypeDataVal}
