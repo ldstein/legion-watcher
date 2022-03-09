@@ -18,7 +18,7 @@ $eventLookup =
 # Init LogFile if it doesn't exist
 if (![System.Diagnostics.EventLog]::SourceExists($LogSource))
 {	
-	New-EventLog –LogName $LogName –Source $LogSource
+	New-EventLog -LogName $LogName -Source $LogSource
 	Write-Host Created Event Log - Name:$LogName, Source:$LogSource
 }
 
