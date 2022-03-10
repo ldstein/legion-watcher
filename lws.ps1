@@ -120,10 +120,12 @@ $Window = [Windows.Markup.XamlReader]::Load($Reader)
 # Action handlers
 
 $InstallTask = 
-{	
+{
+	$userName = (Get-CimInstance -ClassName Win32_ComputerSystem).Username
 	$action = New-ScheduledTaskAction -Execute 'wscript.exe' -Argument $AppVbs -WorkingDirectory $AppDir
-	$trigger = New-ScheduledTaskTrigger -AtStartup
-	Register-ScheduledTask -ErrorVariable registerTaskError -Action $action -RunLevel "Highest" -Trigger $trigger -TaskName $AppName -Description $AppDesc	
+	$trigger = New-ScheduledTaskTrigger -AtLogon -User $username
+	$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+	Register-ScheduledTask -ErrorVariable registerTaskError -Action $action -RunLevel "Highest" -Trigger $trigger -TaskName $AppName -Description $AppDesc -Settings $settings
 	
 	if ($registerTaskError)
 	{
