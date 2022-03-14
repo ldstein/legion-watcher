@@ -1,4 +1,4 @@
-# Legion Watcher
+# Legion Watcher v0.1.1
 
 A powershell script which runs other scripts during various events on Lenovo Legion Laptops.
 
@@ -98,8 +98,11 @@ if %1==16 start notepad.exe
 
 
 ## Version History
-
-* 0.1
+* 0.1.1
+    * Fixed bug where Legion Watcher would not start when on battery
+    * Fixed bug due to WMI name changes between versions of Vantage
+    * Fixed bug in event log script
+* 0.1.0
     * Initial Release
 
 ## License
